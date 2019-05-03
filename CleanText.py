@@ -3,64 +3,64 @@ import matplotlib.pyplot as plot
 import re
 import sys
 
-fail = 'tekstid.csv'
-andmed = pd.read_csv(fail, delimiter=';', encoding = 'unicode_escape')
+file = 'translations.csv'
+data = pd.read_csv(file, delimiter=';', encoding = 'utf-8')
 pd.set_option('display.max_columns', 10)
 pd.set_option('display.width', 180)
 
-tekstid = andmed['valmis'].tolist()
-andmed = andmed.set_index('valmis')
-teksti_suurused = []
+files = data['done'].tolist()
+data = data.set_index('done')
+file_sizes = []
 
-def tekste_pole():
-    print("Töötlemiseks vajalikke tekste pole")
+def no_new_files():
+    print("There are no new files to analyze")
     print("\n")
     print("*     " * 5)
-    print("Programmi töö on lõppenud")
+    print("Program has finished its work")
     sys.exit()
     
-if len(tekstid) == 0:
-    tekste_pole()
+if len(files) == 0:
+    no_new_files()
 
-lk_hind = int(input("Sisesta kehtiv hind lk kohta: "))
-ebavajalikud = input("Sisesta eemaldamisele kuuluvad sümbolid ilma tühikuta") + ('\n')
+page_price = int(input("Insert translation price per page: "))
+characters_to_delete = input("Insert characters to delete without spaces inbetween") + ('\n')
 
-lk_arv = []
+number_of_pages = []
 
-def tootle_fail(fail):
+def analyze_file(file):
 
-    sisu = open(fail, encoding = "UTF-8")
-    sisu_tekst = sisu.read()
-    numbriteta_sisu_tekst = sisu_tekst.translate({ord(i): None for i in ebavajalikud})
-    numbriteta_sisu_tekst = re.sub(' +', ' ', numbriteta_sisu_tekst)
-    teksti_suurused.append(len(numbriteta_sisu_tekst))   
+    content = open(file, encoding = "UTF-8")
+    content_all = content.read()
+    content_without_numbers = content_all.translate({ord(i): None for i in characters_to_delete})
+    content_without_numbers = re.sub(' +', ' ', content_without_numbers)
+    file_sizes.append(len(content_without_numbers))   
     
-for tekst in tekstid:
-    tootle_fail(tekst)
+for text in files:
+    analyze_file(text)
 
-andmed['maht'] = teksti_suurused
-lk_arv = []
+data['size'] = file_sizes
+number_of_pages = []
 
-for i in teksti_suurused:
-    lk_arv.append(round(i/1800, 2))
+for i in file_sizes:
+    number_of_pages.append(round(i/1800, 2))
 
-andmed['lk arv'] = lk_arv
-hind = []
+data['number of pages'] = number_of_pages
+price = []
 
-for i in lk_arv:
-    hind.append(round(i * lk_hind, 2))
+for i in number_of_pages:
+    price.append(round(i * page_price, 2))
 
-andmed['hind'] = hind
+data['price'] = price
 
-tolkede_suurused = pd.Series(andmed["maht"], index = tekstid)
-tolkede_suurused.plot.bar(title = "Tõlkemahud")
+translation_sizes = pd.Series(data["size"], index = files)
+translation_sizes.plot.bar(title = "Translation volume")
 #plot.show()
 
-def kirjuta_faili(fail):
-    uus_fail = fail.strip('.csv') + '_aruanne.csv'
-    andmed.to_csv(uus_fail, sep =';', encoding='utf-8')
+def write_to_file(file):
+    new_file = file.strip('.csv') + '_report.csv'
+    data.to_csv(new_file, sep =';', encoding='utf-8')
 
-#kirjuta_faili(fail)
-print(andmed)
-print("\nKõik tekstid on töödeldud")
-tekste_pole()
+#write_to_file(file)
+print(data)
+print("\nAll translations are processed")
+no_new_files()
